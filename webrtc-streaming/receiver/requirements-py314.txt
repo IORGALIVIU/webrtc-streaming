@@ -1,0 +1,17 @@
+# Requirements for Python 3.14+
+# Use pre-compiled wheels to avoid compilation issues
+
+aiortc>=1.6.0
+aiohttp>=3.9.0
+opencv-python>=4.8.0
+av>=11.0.0
+
+# For Python 3.14, install numpy from pre-compiled wheel
+# pip install numpy --only-binary numpy
+numpy>=2.2.0
+
+Pillow>=10.0.0
+
+# Alternative: If numpy installation fails, try:
+# pip install numpy==2.0.0 --only-binary numpy
+# or downgrade to Python 3.11-3.13
