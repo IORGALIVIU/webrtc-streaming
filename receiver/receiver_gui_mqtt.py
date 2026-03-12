@@ -253,7 +253,7 @@ class VideoReceiverGUI_MQTT:
         # Gamepad Controller for keyboard input
         from gamepad_controller import GamepadController
         self.gamepad = GamepadController(
-            angle_max=180, angle_min=-180,
+            angle_max=60, angle_min=-60,
             speed_max=100, speed_min=-100,  # Allow reverse!
             accel_rate=50.0,      # 50 units/second
             decel_rate=80.0,      # 80 units/second (faster return)
@@ -821,7 +821,7 @@ def main():
     )
     parser.add_argument(
         "--server-ip",
-        default="192.168.0.196",
+        default="192.168.0.199",
         help="Signaling server IP"
     )
     parser.add_argument(

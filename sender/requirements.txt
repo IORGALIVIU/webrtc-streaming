@@ -5,3 +5,5 @@ av>=11.0.0
 numpy>=1.24.0
 paho-mqtt>=2.0.0
 picamera2>=0.3.16
+adafruit-circuitpython-pca9685>=3.4.0
+adafruit-circuitpython-motor>=3.4.0

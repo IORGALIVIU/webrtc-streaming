@@ -39,10 +39,13 @@ logger = logging.getLogger(__name__)
 class MQTTHandler:
     """Handles MQTT communication for sensor data and commands."""
     
-    def __init__(self, broker_address: str, broker_port: int = 1883):
+    def __init__(self, broker_address: str, broker_port: int = 1883, robot_controller=None):
         self.broker_address = broker_address
         self.broker_port = broker_port
         self.client_id = "raspberry_pi_webrtc"
+        
+        # Robot hardware controller (optional)
+        self.robot_controller = robot_controller
         
         # Topics
         self.topic_publish = "robot/senzori"
@@ -100,16 +103,37 @@ class MQTTHandler:
                 mode = "MANUAL" if self.received_commands["mod_de_functionare"] == 1 else "AUTOMAT"
                 logger.info(f"[MQTT] Mode received: {mode}")
                 print(f"[MQTT DEBUG] Mode changed to: {mode}")
+                
+                # If switching to AUTO mode, stop robot
+                if self.robot_controller and self.received_commands["mod_de_functionare"] == 0:
+                    self.robot_controller.update(angle=0, speed=0)
+                    logger.info("[ROBOT] Switched to AUTO - motors stopped")
             
             elif topic == self.topic_subscribe_unghi:
                 self.received_commands["unghi_manual"] = data.get("unghi_manual", 0)
                 logger.info(f"[MQTT] Manual angle: {self.received_commands['unghi_manual']}°")
                 print(f"[MQTT DEBUG] Angle command: {self.received_commands['unghi_manual']}°")
+                
+                # Apply angle to robot if in MANUAL mode
+                if self.robot_controller and self.received_commands["mod_de_functionare"] == 1:
+                    angle = self.received_commands["unghi_manual"]
+                    speed = self.received_commands["viteza_manual"]
+                    print("MQTT MESSAGE RECEIVED:", message.topic, message.payload)
+                    self.robot_controller.update(angle=angle, speed=speed)
+                    logger.debug(f"[ROBOT] Updated: angle={angle}°, speed={speed}")
             
             elif topic == self.topic_subscribe_viteza:
                 self.received_commands["viteza_manual"] = data.get("viteza_manual", 0)
                 logger.info(f"[MQTT] Manual speed: {self.received_commands['viteza_manual']} RPM")
                 print(f"[MQTT DEBUG] Speed command: {self.received_commands['viteza_manual']} RPM")
+                
+                # Apply speed to robot if in MANUAL mode
+                if self.robot_controller and self.received_commands["mod_de_functionare"] == 1:
+                    angle = self.received_commands["unghi_manual"]
+                    speed = self.received_commands["viteza_manual"]
+                    print("MQTT MESSAGE RECEIVED:", message.topic, message.payload)
+                    self.robot_controller.update(angle=angle, speed=speed)
+                    logger.debug(f"[ROBOT] Updated: angle={angle}°, speed={speed}")
                 
         except json.JSONDecodeError:
             logger.error(f"[MQTT] JSON decode error: {payload}")
@@ -365,10 +389,22 @@ async def run_sender(video_source: str, server_url: str, fps: int,
     else:
         logger.info("Using Pi Camera Module")
     
+    # Initialize Robot Controller (optional)
+    robot_controller = None
+    try:
+        from robot_controller import RobotCarController
+        robot_controller = RobotCarController()
+        logger.info("✅ Robot hardware controller initialized")
+    except ImportError:
+        logger.warning("⚠️  robot_controller.py not found - running without hardware control")
+    except Exception as e:
+        logger.warning(f"⚠️  Failed to initialize robot hardware: {e}")
+        logger.warning("Continuing without hardware control (commands will be logged only)")
+    
     # Setup MQTT
     mqtt_handler = None
     if mqtt_broker:
-        mqtt_handler = MQTTHandler(mqtt_broker, mqtt_port)
+        mqtt_handler = MQTTHandler(mqtt_broker, mqtt_port, robot_controller=robot_controller)
         if not mqtt_handler.connect():
             logger.warning("MQTT connection failed, continuing without MQTT")
             mqtt_handler = None
@@ -469,6 +505,9 @@ async def run_sender(video_source: str, server_url: str, fps: int,
             await pc.close()
             if mqtt_handler:
                 mqtt_handler.disconnect()
+            if robot_controller:
+                robot_controller.cleanup()
+                logger.info("Robot hardware cleaned up")
 
 
 def main():
