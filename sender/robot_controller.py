@@ -15,6 +15,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+
 class RobotCarController:
     """
     Controls robot car hardware via PCA9685 PWM driver.
@@ -110,13 +111,13 @@ class RobotCarController:
 
         try:
             # Map input angle (-60 to +60) to physical servo range (-90 to +90)
-            physical_angle = (angle / 60.0) * 90.0
+            # physical_angle = (angle / 60.0) * 90.0  #----
 
             # Clamp to physical limits
-            physical_angle = max(-90, min(90, physical_angle))
+            physical_angle = max(-60, min(60, angle))
 
             # Convert angle to pulse width (ms)
-            pulse_ms = 1.5 + (physical_angle / 90.0) * 1.0
+            pulse_ms = 1.5 + (physical_angle / 90.0) * 1.0  # ----
 
             # Convert pulse width to PWM duty cycle (0-65535)
             # At 50Hz: period = 20ms, PCA9685 uses 16-bit resolution
@@ -264,19 +265,35 @@ if __name__ == "__main__":
         controller.set_angle(0)
         time.sleep(2)
 
-        print("\n[Test 2] Turn left (-90 deg)")
+        print("\n[Test 2] Turn left (-180 deg)")
         controller.set_angle(-90)
         time.sleep(2)
 
-        print("\n[Test 3] Turn right (+90 deg)")
+        print("\n[Test 3] Turn right (180 deg)")
         controller.set_angle(90)
+        time.sleep(2)
+
+        print("\n[Test 2] Turn left (-60 deg)")
+        controller.set_angle(-60)
+        time.sleep(2)
+
+        print("\n[Test 3] Turn right (+60 deg)")
+        controller.set_angle(60)
+        time.sleep(2)
+
+        print("\n[Test 2] Turn left (-45 deg)")
+        controller.set_angle(-40)
+        time.sleep(2)
+
+        print("\n[Test 3] Turn right (+45 deg)")
+        controller.set_angle(40)
         time.sleep(2)
 
         print("\n[Test 4] Center servo (0 deg)")
         controller.set_angle(0)
         time.sleep(2)
 
-        print("\n[Test 5] Motors forward slow (30%)")
+        """ print("\n[Test 5] Motors forward slow (30%)")
         controller.set_speed(30)
         time.sleep(3)
 
@@ -302,7 +319,7 @@ if __name__ == "__main__":
 
         print("\n[Test 11] Combined - Turn and drive")
         controller.update(angle=45, speed=50)
-        time.sleep(3)
+        time.sleep(3)                              """
 
         print("\n[Test 12] Stop and center")
         controller.update(angle=0, speed=0)

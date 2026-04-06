@@ -20,10 +20,10 @@ class GamepadController:
     """
     
     def __init__(self, 
-                 angle_max=180, angle_min=-180,
+                 angle_max=60, angle_min=-60,
                  speed_max=100, speed_min=-100,  # Allow negative speed!
-                 accel_rate=50.0,      # Units/second when holding
-                 decel_rate=80.0,      # Units/second when released
+                 accel_rate=90.0,      # Units/second when holding
+                 decel_rate=90.0,      # Units/second when released
                  quick_tap_boost=10.0  # Instant change for quick taps
                 ):
         # Limits
